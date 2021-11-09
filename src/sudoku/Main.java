@@ -1101,7 +1101,7 @@ public class Main {
 	/**
 	 * Prints all remaining (unused) options in argMap except "option"
 	 * 
-	 * @param Option option that is currently worked on
+	 * @param option option that is currently worked on
 	 * @param argMap All options from the command line
 	 */
 	private static void printIgnoredOptions(String option, Map<String, String> argMap) {
