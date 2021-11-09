@@ -20,6 +20,7 @@ package sudoku;
 
 import java.util.Enumeration;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 
 /**
  *
@@ -83,9 +84,10 @@ public class CheckNode extends DefaultMutableTreeNode {
 			// FULL -> NONE
 			selectionState = selectionState == FULL ? NONE : FULL;
 			@SuppressWarnings("unchecked")
-			Enumeration<CheckNode> enumeration = (Enumeration<CheckNode>) children.elements();
+			//Enumeration<CheckNode> enumeration = (Enumeration<CheckNode>) children.elements();
+			Enumeration<TreeNode> enumeration = children.elements();
 			while (enumeration.hasMoreElements()) {
-				CheckNode node = enumeration.nextElement();
+				CheckNode node = (CheckNode) enumeration.nextElement();
 				node.selectionState = selectionState;
 				adjustModel(node);
 			}

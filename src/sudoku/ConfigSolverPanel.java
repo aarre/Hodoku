@@ -38,6 +38,7 @@ import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -476,10 +477,10 @@ public class ConfigSolverPanel extends javax.swing.JPanel implements ListDragAnd
 		CheckNode root = new CheckNode();
 		for (int i = 0; i < steps.length; i++) {
 			@SuppressWarnings("unchecked")
-			Enumeration<CheckNode> en = (Enumeration<CheckNode>) root.children();
+			Enumeration<TreeNode> en = root.children();
 			CheckNode act = null;
 			while (en.hasMoreElements()) {
-				act = en.nextElement();
+				act = (CheckNode) en.nextElement();
 				if (act.getCategory() == steps[i].getCategory()) {
 					break;
 				}

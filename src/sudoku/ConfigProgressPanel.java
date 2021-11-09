@@ -40,6 +40,7 @@ import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -610,11 +611,10 @@ public class ConfigProgressPanel extends javax.swing.JPanel implements ListDragA
 				// only steps with difficulty EASY - UNFAIR are allowed
 				continue;
 			}
-			@SuppressWarnings("unchecked")
-			Enumeration<CheckNode> en = (Enumeration<CheckNode>) root.children();
+			Enumeration<TreeNode> en = root.children();
 			CheckNode act = null;
 			while (en.hasMoreElements()) {
-				act = en.nextElement();
+				act = (CheckNode) en.nextElement();
 				if (act.getCategory() == steps[i].getCategory()) {
 					break;
 				}

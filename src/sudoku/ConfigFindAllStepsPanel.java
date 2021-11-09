@@ -21,6 +21,7 @@ package sudoku;
 import java.util.Enumeration;
 import javax.swing.JLabel;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -697,10 +698,10 @@ public class ConfigFindAllStepsPanel extends javax.swing.JPanel {
 				continue;
 			}
 			@SuppressWarnings("unchecked")
-			Enumeration<CheckNode> en = (Enumeration<CheckNode>) root.children();
+			Enumeration<TreeNode> en = root.children();
 			CheckNode act = null;
 			while (en.hasMoreElements()) {
-				act = en.nextElement();
+				act = (CheckNode) en.nextElement();
 				if (act.getCategory() == steps[i].getCategory()) {
 					break;
 				}

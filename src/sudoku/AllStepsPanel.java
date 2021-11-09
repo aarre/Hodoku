@@ -34,10 +34,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JToggleButton;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
+import javax.swing.tree.*;
 
 /**
  *
@@ -234,9 +231,10 @@ public final class AllStepsPanel extends javax.swing.JPanel implements TreeSelec
 			if (last.getUserObject() instanceof String) {
 				// Erstes Step-Kind holen
 				@SuppressWarnings("unchecked")
-				Enumeration<DefaultMutableTreeNode> children = (Enumeration<DefaultMutableTreeNode>) last.children();
+				//Enumeration<DefaultMutableTreeNode> children = (Enumeration<DefaultMutableTreeNode>) last.children();
+				Enumeration<TreeNode> children = last.children();
 				while (children.hasMoreElements()) {
-					DefaultMutableTreeNode act = children.nextElement();
+					DefaultMutableTreeNode act = (DefaultMutableTreeNode) children.nextElement();
 					if (act.getUserObject() instanceof SolutionStep) {
 						actStep = (SolutionStep) act.getUserObject();
 						break;
@@ -866,10 +864,9 @@ public final class AllStepsPanel extends javax.swing.JPanel implements TreeSelec
 	 */
 	private int getTopLevelIndex(DefaultMutableTreeNode root, SolutionStep step) {
 		int index = 0;
-		@SuppressWarnings("unchecked")
-		Enumeration<DefaultMutableTreeNode> nodes = (Enumeration<DefaultMutableTreeNode>) root.children();
+		Enumeration<TreeNode> nodes = root.children();
 		while (nodes.hasMoreElements()) {
-			DefaultMutableTreeNode nextNode = nodes.nextElement();
+			DefaultMutableTreeNode nextNode = (DefaultMutableTreeNode) nodes.nextElement();
 			SolutionStep actStep = getStepFromNode(nextNode);
 			if (actStep.getCandidatesToDelete().size() < step.getCandidatesToDelete().size()) {
 				break;
@@ -883,11 +880,9 @@ public final class AllStepsPanel extends javax.swing.JPanel implements TreeSelec
 		if (node.getUserObject() instanceof SolutionStep) {
 			return (SolutionStep) node.getUserObject();
 		} else if (node.getUserObject() instanceof String) {
-			// erstes Kind suchen, das ein SolutionStep ist
-			@SuppressWarnings("unchecked")
-			Enumeration<DefaultMutableTreeNode> nodes = (Enumeration<DefaultMutableTreeNode>) node.children();
+			Enumeration<TreeNode> nodes = node.children();
 			while (nodes.hasMoreElements()) {
-				DefaultMutableTreeNode nextNode = nodes.nextElement();
+				DefaultMutableTreeNode nextNode = (DefaultMutableTreeNode) nodes.nextElement();
 				if (nextNode.getUserObject() instanceof SolutionStep) {
 					return (SolutionStep) nextNode.getUserObject();
 				}
@@ -901,11 +896,9 @@ public final class AllStepsPanel extends javax.swing.JPanel implements TreeSelec
 		DefaultMutableTreeNode last = (DefaultMutableTreeNode) stepsTree.getLastSelectedPathComponent();
 		if (last != null) {
 			if (last.getUserObject() instanceof String) {
-				// Erstes Step-Kind anzeigen
-				@SuppressWarnings("unchecked")
-				Enumeration<DefaultMutableTreeNode> children = (Enumeration<DefaultMutableTreeNode>) last.children();
+				Enumeration<TreeNode> children = last.children();
 				while (children.hasMoreElements()) {
-					DefaultMutableTreeNode act = children.nextElement();
+					DefaultMutableTreeNode act = (DefaultMutableTreeNode) children.nextElement();
 					if (act.getUserObject() instanceof SolutionStep) {
 						mainFrame.setSolutionStep((SolutionStep) act.getUserObject(), true);
 						break;
