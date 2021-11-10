@@ -32,9 +32,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.LookAndFeel;
-import javax.swing.UIDefaults;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.plaf.FontUIResource;
 
@@ -56,6 +54,11 @@ public class SudokuUtil {
 	 * getter but should not be written to a configuration file.
 	 */
 	private static PageFormat pageFormat;
+
+	/**
+	 * The name of the look and feel to apply.
+	 */
+	private static String lookAndFeelClassName;
 
 	/**
 	 * Clears the list. To avoid memory leaks all steps in the list are explicitly
@@ -204,19 +207,19 @@ public class SudokuUtil {
 		// ok: start by getting the correct AND existing LaF class
 		LookAndFeelInfo[] lafs = UIManager.getInstalledLookAndFeels();
 		boolean found = false;
-		String preferredLaFClassName = Options.getInstance().getLaf();
-		String storedLaFClassName = preferredLaFClassName;
-		if (!preferredLaFClassName.isEmpty()) {
-			String lafName = preferredLaFClassName.substring(preferredLaFClassName.lastIndexOf('.') + 1);
+		lookAndFeelClassName = Options.getInstance().getLaf();
+		String storedLaFClassName = lookAndFeelClassName;
+		if (!lookAndFeelClassName.isEmpty()) {
+			String lafName = lookAndFeelClassName.substring(lookAndFeelClassName.lastIndexOf('.') + 1);
 			for (int i = 0; i < lafs.length; i++) {
-				if (lafs[i].getClassName().equals(preferredLaFClassName)) {
+				if (lafs[i].getClassName().equals(lookAndFeelClassName)) {
 					found = true;
 					break;
 				} else if (lafs[i].getClassName().endsWith(lafName)) {
 					// same class, different package
-					preferredLaFClassName = lafs[i].getClassName();
+					lookAndFeelClassName = lafs[i].getClassName();
 					Logger.getLogger(Main.class.getName()).log(Level.CONFIG, "laf package changed from {0} to {1}",
-							new Object[] { storedLaFClassName, preferredLaFClassName });
+							new Object[] { storedLaFClassName, lookAndFeelClassName });
 					found = true;
 					break;
 				}
@@ -225,43 +228,39 @@ public class SudokuUtil {
 		if (!found) {
 			// class not present or default requested
 			Options.getInstance().setLaf("");
-			preferredLaFClassName = UIManager.getSystemLookAndFeelClassName();
+			lookAndFeelClassName = UIManager.getSystemLookAndFeelClassName();
 		} else {
-			if (!storedLaFClassName.equals(preferredLaFClassName)) {
-				Options.getInstance().setLaf(preferredLaFClassName);
+			if (!storedLaFClassName.equals(lookAndFeelClassName)) {
+				Options.getInstance().setLaf(lookAndFeelClassName);
 			}
 		}
 
-		// ok, the correct class name is now in preferredLaFClassName
-		// -> obtain an instance of the LaF class
-		ClassLoader classLoader = MainFrame.class.getClassLoader();
-		Class<?> lafClass = null;
-		try {
-			lafClass = classLoader.loadClass(preferredLaFClassName);
-		} catch (ClassNotFoundException e) {
-			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error changing LaF 1", e);
-			return;
-		}
-		LookAndFeel instance = null;
-		try {
-			instance = (LookAndFeel) lafClass.getDeclaredConstructor().newInstance();
-		} catch (Exception ex) {
-			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error changing LaF 2", ex);
-			return;
+		// ok, the correct class name is now in lookAndFeelClassName
+		// -> obtain an lookAndFeel of the LaF class
+		LookAndFeel lookAndFeel = null;
+
+		// Try to get a Nimbus look and feel if necessary
+		if (lookAndFeelClassName.contains("Nimbus")) {
+			lookAndFeel = getNimbusLookAndFeel();
 		}
 
-		// we have a LaF instance: try setting it
+		// Get another look and feel
+		if (lookAndFeel == null) {
+			lookAndFeel = getNonNimbusLookAndFeel();
+		}
+
+		// we have a look and feel: try setting it
 		try {
 
 			int customFontSize = Options.getInstance().getCustomFontSize();
 
 			// Change the font size for the Nimbus look and feel before setting the look and feel
 			if (!Options.getInstance().isUseDefaultFontSize()) {
-				changeFontSizeForNimbus(instance, customFontSize);
+				changeFontSizeForNimbus(lookAndFeel, customFontSize);
 			}
 
 			// set the new LaF
-			UIManager.setLookAndFeel(instance);
+			UIManager.setLookAndFeel(lookAndFeel);
 			Logger.getLogger(Main.class.getName()).log(Level.CONFIG, "laf={0}", UIManager.getLookAndFeel().getName());
 
 			// Change the font size for non-Nimbus look and feels after setting the look and feel
@@ -269,8 +268,85 @@ public class SudokuUtil {
 				changeFontSizeForNonNimbus(customFontSize);
 			}
 		} catch (Exception ex) {
-			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error changing LaF 3", ex);
+			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "ERROR 1000: Unable to change look and feel to " + lookAndFeelClassName, ex);
+			Logger.getLogger(Main.class.getName()).log(Level.FINEST, "Available look and feels:");
+			for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+				Logger.getLogger(Main.class.getName()).log(Level.FINEST, "Look and feel {0} / {1}", new Object[] {info.getClassName(), info.getName()});
+			}
 		}
+	}
+
+	/**
+	 * Get a non-Nimbus LookAndFeel instance.
+	 *
+	 * @return A LookAndFeel instance for a non-Nimbus look and feel
+	 */
+	private static LookAndFeel getNonNimbusLookAndFeel() {
+		LookAndFeel result = null;
+		String lafName = null;
+		try {
+			lafName = getLookAndFeelName();
+			result = UIManager.createLookAndFeel(lafName);
+		} catch (Exception ex) {
+			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "ERROR 1001: Unable to change look and feel to " + lafName + " / " + lookAndFeelClassName, ex);
+		}
+		return result;
+	}
+
+	/**
+	 * Get the name associated with the look and feel class.
+	 * <p>
+	 * This is necessary because {@link UIManager#createLookAndFeel(String)} takes a look and feel name, not a look and feel
+	 * class name.
+	 *
+	 * @return The name of the look and feel class stored in {@link #lookAndFeelClassName}
+	 */
+	private static String getLookAndFeelName() {
+		String result = null;
+		for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+			Logger.getLogger(Main.class.getName()).log(Level.FINEST, "Checking class name {0} / {1}", new Object[] {info.getName(), info.getClassName()});
+			if (info.getClassName().equals(lookAndFeelClassName)) {
+				result = info.getName();
+				break;
+			}
+		}
+		return result;
+	}
+
+
+	/**
+	 * Get a Nimbus LookAndFeel instance.
+	 *
+	 * Do not set the Nimbus look and feel explicitly by invoking the UIManager.setLookAndFeel method because not all
+	 * versions or implementations of Java SE 6 support Nimbus. Additionally, the location of the Nimbus package changed
+	 * between the 6u10 and JDK7 releases. Iterating through all installed look and feel implementations is a more
+	 * robust approach because, if Nimbus is not available, the default look and feel can be used. For the Java SE 6
+	 * Update 10 release, the Nimbus package is located at com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel.
+	 *
+	 * @return A Nimbus LookAndFeel instance or null if Nimbus is not available
+	 */
+	private static LookAndFeel getNimbusLookAndFeel() {
+		LookAndFeel result = null;
+		final String requestedLaFClassName = lookAndFeelClassName;
+		try {
+			for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+				Logger.getLogger(Main.class.getName()).log(Level.FINEST, "Checking look and feel {0} / {1}", new Object[] {info.getName(), info.getClassName()});
+				if ("Nimbus".equals(info.getName())) {
+					result = UIManager.createLookAndFeel("Nimbus");
+					break;
+				}
+			}
+		} catch (UnsupportedLookAndFeelException e) {
+			// Nimbus is not supported, so set the GUI to another look and feel.
+			lookAndFeelClassName = UIManager.getSystemLookAndFeelClassName();
+			Logger.getLogger(Main.class.getName()).log(Level.CONFIG, "ERROR 1002: Look and feel {0} not supported, switching to {1}", new Object[] {requestedLaFClassName, lookAndFeelClassName});
+		}
+		// Nimbus is not in the list of installed look and feels, so set the GUI to another look and feel.
+		if (result == null) {
+			lookAndFeelClassName = UIManager.getSystemLookAndFeelClassName();
+			Logger.getLogger(Main.class.getName()).log(Level.CONFIG, "ERROR 1003: Look and feel {0} not installed, switching to {1}", new Object[] {requestedLaFClassName, lookAndFeelClassName});
+		}
+		return result;
 	}
 
 	/**

@@ -58,6 +58,7 @@ public class Main {
 
 	/** Maintain strong references to Loggers that have been configured manually */
 	private static List<Logger> loggers = new ArrayList<Logger>();
+
 	/** Value of the property "os.name" */
 	public static String OS_NAME = "";
 
@@ -397,7 +398,7 @@ public class Main {
 		Logger rootLogger = Logger.getLogger("");
 		rootLogger.addHandler(fh);
 		rootLogger.setLevel(Level.CONFIG);
-		// rootLogger.setLevel(Level.ALL);
+		//rootLogger.setLevel(Level.ALL);
 
 		Handler[] handlers = rootLogger.getHandlers();
 		for (Handler handler : handlers) {
@@ -418,6 +419,9 @@ public class Main {
 		// Logger.getLogger(TablingSolver.class.getName()).setLevel(Level.FINER);
 		loggers.add(Logger.getLogger(SudokuSolver.class.getName()));
 		// logger.setLevel(Level.FINER);
+
+		Logger mainLogger = Logger.getLogger(Main.class.getName());
+		mainLogger.setLevel(Level.ALL);
 
 		Logger.getLogger(Main.class.getName()).log(Level.CONFIG, "java.io.tmpdir={0}",
 				System.getProperty("java.io.tmpdir"));
