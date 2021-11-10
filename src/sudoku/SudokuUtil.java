@@ -206,24 +206,7 @@ public class SudokuUtil {
 	 * {@link Options#useDefaultFontSize} is set to <code>false</code>.<br>
 	 * <br>
 	 * 
-	 * This is where the problems starts: On most LaFs (GTK excluded, nothing can be
-	 * changed in GTK LaF) changing the font size works by changing all Font
-	 * instances in <code>UIManager.getDefaults()</code>. Not with Nimbus though:
-	 * Due to late initialization issues the standard method leads to unpredictable
-	 * results (see
-	 * http://stackoverflow.com/questions/949353/java-altering-ui-fonts-nimbus-doesnt-work
-	 * for details).<br>
-	 * <br>
-	 * 
-	 * Changing the font size in Nimbus can be done in one of two ways:
-	 * 
-	 * <ul>
-	 * <li>Subclass <code>NimbusLookAndFeel</code> and override
-	 * <code>getDefaults()</code></li>
-	 * <li>Obtain an instance of <code>NimbusLookAndFeel</code> and set the
-	 * <code>defaultFont</code> option on the instance directly (<b>not</b> on
-	 * <code>UIManager.getDefaults()</code>).</li>
-	 * </ul>
+	 * This is where the problems starts:
 	 * 
 	 * Although both methods seem to be simple enough, there is a slight
 	 * complication: The package of the <code>NimbusLookAndFeel</code> class changed
@@ -282,12 +265,34 @@ public class SudokuUtil {
 				Object defaultFont = uiDefaults.get("defaultFont");
 				if (defaultFont != null) {
 					// Exists on Nimbus and triggers inheritance, so change the defaults for Nimbus
+					/**
+					 * Not with Nimbus though:
+					 * Due to late initialization issues the standard method leads to unpredictable
+					 * results (see
+					 * http://stackoverflow.com/questions/949353/java-altering-ui-fonts-nimbus-doesnt-work
+					 * for details).<br>
+					 *
+					 * Changing the font size in Nimbus can be done in one of two ways:
+					 *
+					 *  <ul>
+					 *  <li>Subclass <code>NimbusLookAndFeel</code> and override
+					 *  <code>getDefaults()</code></li>
+					 *  <li>Obtain an instance of <code>NimbusLookAndFeel</code> and set the
+					 *  <code>defaultFont</code> option on the instance directly (<b>not</b> on
+					 *  <code>UIManager.getDefaults()</code>).</li>
+					 *  </ul>
+					 */
 					Font font = (Font) defaultFont;
 					if (font.getSize() != customFontSize) {
 						uiDefaults.put("defaultFont", new FontUIResource(font.getName(), font.getStyle(), customFontSize));
 					}
 				} else {
-					// Change the defaults for all other LaFs
+					/**
+					 * Change the defaults for all other LaFs
+					 *
+					 * On most LaFs (GTK excluded), changing the font size works by changing all Font
+					 * instances in <code>UIManager.getDefaults()</code>.
+					 */
 					Enumeration<Object> keys = uiDefaults.keys();
 					while (keys.hasMoreElements()) {
 						Object key = keys.nextElement();
