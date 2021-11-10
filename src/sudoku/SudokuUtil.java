@@ -281,7 +281,7 @@ public class SudokuUtil {
 		}
 		LookAndFeel instance = null;
 		try {
-			instance = (LookAndFeel) lafClass.newInstance();
+			instance = (LookAndFeel) lafClass.getDeclaredConstructor().newInstance();
 		} catch (Exception ex) {
 			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error changing LaF 2", ex);
 			return;
