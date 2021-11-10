@@ -1062,6 +1062,7 @@ public class Main {
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {
+				Thread.currentThread().setUncaughtExceptionHandler(new ExceptionHandler());
 				MainFrame mainFrame = new MainFrame(lf);
 				mainFrame.setVisible(true);
 			}
