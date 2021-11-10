@@ -241,19 +241,19 @@ public class SudokuUtil {
 		// ok: start by getting the correct AND existing LaF class
 		LookAndFeelInfo[] lafs = UIManager.getInstalledLookAndFeels();
 		boolean found = false;
-		String className = Options.getInstance().getLaf();
-		String oldClassName = className;
-		if (!className.isEmpty()) {
-			String lafName = className.substring(className.lastIndexOf('.') + 1);
+		String lookAndFeelClassName = Options.getInstance().getLaf();
+		String oldClassName = lookAndFeelClassName;
+		if (!lookAndFeelClassName.isEmpty()) {
+			String lafName = lookAndFeelClassName.substring(lookAndFeelClassName.lastIndexOf('.') + 1);
 			for (int i = 0; i < lafs.length; i++) {
-				if (lafs[i].getClassName().equals(className)) {
+				if (lafs[i].getClassName().equals(lookAndFeelClassName)) {
 					found = true;
 					break;
 				} else if (lafs[i].getClassName().endsWith(lafName)) {
 					// same class, different package
-					className = lafs[i].getClassName();
+					lookAndFeelClassName = lafs[i].getClassName();
 					Logger.getLogger(Main.class.getName()).log(Level.CONFIG, "laf package changed from {0} to {1}",
-							new Object[] { oldClassName, className });
+							new Object[] { oldClassName, lookAndFeelClassName });
 					found = true;
 					break;
 				}
@@ -262,64 +262,40 @@ public class SudokuUtil {
 		if (!found) {
 			// class not present or default requested
 			Options.getInstance().setLaf("");
-			className = UIManager.getSystemLookAndFeelClassName();
+			lookAndFeelClassName = UIManager.getSystemLookAndFeelClassName();
 		} else {
-			if (!oldClassName.equals(className)) {
-				Options.getInstance().setLaf(className);
+			if (!oldClassName.equals(lookAndFeelClassName)) {
+				Options.getInstance().setLaf(lookAndFeelClassName);
 			}
 		}
 
-		// ok, the correct class name is now in className
-		// -> obtain an instance of the LaF class
-		ClassLoader classLoader = MainFrame.class.getClassLoader();
-		Class<?> lafClass = null;
+		// We have a look and feel class name -> try setting the look and feel
 		try {
-			lafClass = classLoader.loadClass(className);
-		} catch (ClassNotFoundException e) {
-			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error changing LaF 1", e);
-			return;
-		}
-		LookAndFeel instance = null;
-		try {
-			instance = (LookAndFeel) lafClass.getDeclaredConstructor().newInstance();
-		} catch (Exception ex) {
-			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error changing LaF 2", ex);
-			return;
-		}
-
-		// we have a LaF instance: try setting it
-		try {
-			int fontSize = Options.getInstance().getCustomFontSize();
-			if (!Options.getInstance().isUseDefaultFontSize()) {
-				// first change the defaults for Nimbus
-				UIDefaults def = instance.getDefaults();
-				Object value = null;
-				if ((value = def.get("defaultFont")) != null) {
-					// exists on Nimbus and triggers inheritance
-					Font font = (Font) value;
-					if (font.getSize() != fontSize) {
-//                        System.out.println("Changing fontSize (1) from " + font.getSize() + " to " + fontSize);
-						def.put("defaultFont", new FontUIResource(font.getName(), font.getStyle(), fontSize));
-					}
-				}
-			}
 
 			// set the new LaF
-			UIManager.setLookAndFeel(instance);
+			UIManager.setLookAndFeel(lookAndFeelClassName);
 			Logger.getLogger(Main.class.getName()).log(Level.CONFIG, "laf={0}", UIManager.getLookAndFeel().getName());
 
 			if (!Options.getInstance().isUseDefaultFontSize()) {
-				// change the defaults for all other LaFs
-				UIDefaults def = UIManager.getDefaults();
-				// def.keySet() doesnt seem to work -> use def.keys() instead!
-				Enumeration<Object> keys = def.keys();
-				while (keys.hasMoreElements()) {
-					Object key = keys.nextElement();
-					Font font = def.getFont(key);
-					if (font != null) {
-						if (font.getSize() != fontSize) {
-//                            System.out.println("Changing fontSize (2) from " + font.getSize() + " to " + fontSize);
-							def.put(key, new FontUIResource(font.getName(), font.getStyle(), fontSize));
+				int customFontSize = Options.getInstance().getCustomFontSize();
+				UIDefaults uiDefaults = UIManager.getDefaults();
+				Object defaultFont = uiDefaults.get("defaultFont");
+				if (defaultFont != null) {
+					// Exists on Nimbus and triggers inheritance, so change the defaults for Nimbus
+					Font font = (Font) defaultFont;
+					if (font.getSize() != customFontSize) {
+						uiDefaults.put("defaultFont", new FontUIResource(font.getName(), font.getStyle(), customFontSize));
+					}
+				} else {
+					// Change the defaults for all other LaFs
+					Enumeration<Object> keys = uiDefaults.keys();
+					while (keys.hasMoreElements()) {
+						Object key = keys.nextElement();
+						Font font = uiDefaults.getFont(key);
+						if (font != null) {
+							if (font.getSize() != customFontSize) {
+								uiDefaults.put(key, new FontUIResource(font.getName(), font.getStyle(), customFontSize));
+							}
 						}
 					}
 				}
