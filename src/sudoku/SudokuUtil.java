@@ -149,31 +149,26 @@ public class SudokuUtil {
 	}
 
 	/**
-	 * HiRes printing in Java is difficult: The whole printing engine (except
-	 * apparently text printing) is scaled down to 72dpi. This is done by applying
-	 * an AffineTransform object with a scale to the Graphics2D object of the
-	 * printer. To make things more complicated just reversing the scale is not
-	 * enough: for Landscape printing a rotation is applied after the scale.<br>
-	 * <br>
-	 * 
-	 * The easiest way to really achieve hires printing is to directly manipulate
-	 * the transformation matrix. The default matrix looks like this:<br>
-	 * 
+	 * HiRes printing in Java is difficult: The whole printing engine (except apparently text printing) is scaled down
+	 * to 72dpi. This is done by applying an AffineTransform object with a scale to the Graphics2D object of the
+	 * printer. To make things more complicated just reversing the scale is not enough: for Landscape printing a
+	 * rotation is applied after the scale.
+	 * <p>
+	 * The easiest way to really achieve hires printing is to directly manipulate the transformation matrix. The
+	 * default matrix looks like this:
 	 * <pre>
 	 *      Portrait     Landscape
 	 *    [ d  0  x ]   [  0  d  x ]
 	 *    [ 0  d  y ]   [ -d  0  y ]
 	 *    [ 0  0  1 ]   [  0  0  1 ]
-	 * 
+	 *
 	 *    d = printerResolution / 72.0
 	 * </pre>
-	 * 
-	 * x and y are set by the printer engine and should not be changed.<br>
-	 * <br>
-	 * 
-	 * The values from the {@link PageFormat} object are scaled down to 72dpi as
-	 * well and have to be multiplied with d to get the correct hires values.
-	 * 
+	 * x and y are set by the printer engine and should not be changed.
+	 * <p>
+	 * The values from the {@link PageFormat} object are scaled down to 72dpi as well and have to be multiplied with d
+	 * to get the correct hires values.
+	 *
 	 * @param g2
 	 * @return The scale factor
 	 */
@@ -200,60 +195,28 @@ public class SudokuUtil {
 	}
 
 	/**
-	 * Sets the Look and Feel to the class stored in {@link Options#laf}. To make
-	 * HoDoKu behave nicely for visually impaired users, a non standard font size
-	 * {@link Options#customFontSize} can be used for all GUI elements, if
-	 * {@link Options#useDefaultFontSize} is set to <code>false</code>.<br>
-	 * <br>
-	 * 
-	 * This is where the problems starts: On most LaFs (GTK excluded, nothing can be
-	 * changed in GTK LaF) changing the font size works by changing all Font
-	 * instances in <code>UIManager.getDefaults()</code>. Not with Nimbus though:
-	 * Due to late initialization issues the standard method leads to unpredictable
-	 * results (see
-	 * http://stackoverflow.com/questions/949353/java-altering-ui-fonts-nimbus-doesnt-work
-	 * for details).<br>
-	 * <br>
-	 * 
-	 * Changing the font size in Nimbus can be done in one of two ways:
-	 * 
-	 * <ul>
-	 * <li>Subclass <code>NimbusLookAndFeel</code> and override
-	 * <code>getDefaults()</code></li>
-	 * <li>Obtain an instance of <code>NimbusLookAndFeel</code> and set the
-	 * <code>defaultFont</code> option on the instance directly (<b>not</b> on
-	 * <code>UIManager.getDefaults()</code>).</li>
-	 * </ul>
-	 * 
-	 * Although both methods seem to be simple enough, there is a slight
-	 * complication: The package of the <code>NimbusLookAndFeel</code> class changed
-	 * between Java 1.6 (<code>sun.swing.plaf.nimbus</code>) and 1.7
-	 * (<code>javax.swing.plaf.nimbus</code>). That means, that if the class is
-	 * subclassed or instantiated directly, code compiled with 1.7 will not start on
-	 * 1.6 and vice versa (and of course the program will not start on all JRE
-	 * versions, that dont have Nimbus included). And we have to think of the
-	 * possiblilty, that the class stored in {@link Options#laf} doesnt exist at
-	 * all, if the hcfg file is moved between platforms.<br>
-	 * <br>
-	 * 
+	 * Set the look and feel to the class whose name is stored in {@link Options#laf}.
+	 * <p>
+	 * To make HoDoKu behave nicely for visually impaired users, a nonstandard font size {@link Options#customFontSize}
+	 * can be used for all GUI elements, if {@link Options#useDefaultFontSize} is set to <code>false</code>.
 	 */
 	public static void setLookAndFeel() {
 		// ok: start by getting the correct AND existing LaF class
 		LookAndFeelInfo[] lafs = UIManager.getInstalledLookAndFeels();
 		boolean found = false;
-		String className = Options.getInstance().getLaf();
-		String oldClassName = className;
-		if (!className.isEmpty()) {
-			String lafName = className.substring(className.lastIndexOf('.') + 1);
+		String preferredLaFClassName = Options.getInstance().getLaf();
+		String storedLaFClassName = preferredLaFClassName;
+		if (!preferredLaFClassName.isEmpty()) {
+			String lafName = preferredLaFClassName.substring(preferredLaFClassName.lastIndexOf('.') + 1);
 			for (int i = 0; i < lafs.length; i++) {
-				if (lafs[i].getClassName().equals(className)) {
+				if (lafs[i].getClassName().equals(preferredLaFClassName)) {
 					found = true;
 					break;
 				} else if (lafs[i].getClassName().endsWith(lafName)) {
 					// same class, different package
-					className = lafs[i].getClassName();
+					preferredLaFClassName = lafs[i].getClassName();
 					Logger.getLogger(Main.class.getName()).log(Level.CONFIG, "laf package changed from {0} to {1}",
-							new Object[] { oldClassName, className });
+							new Object[] { storedLaFClassName, preferredLaFClassName });
 					found = true;
 					break;
 				}
@@ -262,19 +225,19 @@ public class SudokuUtil {
 		if (!found) {
 			// class not present or default requested
 			Options.getInstance().setLaf("");
-			className = UIManager.getSystemLookAndFeelClassName();
+			preferredLaFClassName = UIManager.getSystemLookAndFeelClassName();
 		} else {
-			if (!oldClassName.equals(className)) {
-				Options.getInstance().setLaf(className);
+			if (!storedLaFClassName.equals(preferredLaFClassName)) {
+				Options.getInstance().setLaf(preferredLaFClassName);
 			}
 		}
 
-		// ok, the correct class name is now in className
+		// ok, the correct class name is now in preferredLaFClassName
 		// -> obtain an instance of the LaF class
 		ClassLoader classLoader = MainFrame.class.getClassLoader();
 		Class<?> lafClass = null;
 		try {
-			lafClass = classLoader.loadClass(className);
+			lafClass = classLoader.loadClass(preferredLaFClassName);
 		} catch (ClassNotFoundException e) {
 			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error changing LaF 1", e);
 			return;
@@ -289,43 +252,82 @@ public class SudokuUtil {
 
 		// we have a LaF instance: try setting it
 		try {
-			int fontSize = Options.getInstance().getCustomFontSize();
+
+			int customFontSize = Options.getInstance().getCustomFontSize();
+
+			// Change the font size for the Nimbus look and feel before setting the look and feel
 			if (!Options.getInstance().isUseDefaultFontSize()) {
-				// first change the defaults for Nimbus
-				UIDefaults def = instance.getDefaults();
-				Object value = null;
-				if ((value = def.get("defaultFont")) != null) {
-					// exists on Nimbus and triggers inheritance
-					Font font = (Font) value;
-					if (font.getSize() != fontSize) {
-//                        System.out.println("Changing fontSize (1) from " + font.getSize() + " to " + fontSize);
-						def.put("defaultFont", new FontUIResource(font.getName(), font.getStyle(), fontSize));
-					}
-				}
+				changeFontSizeForNimbus(instance, customFontSize);
 			}
 
 			// set the new LaF
 			UIManager.setLookAndFeel(instance);
 			Logger.getLogger(Main.class.getName()).log(Level.CONFIG, "laf={0}", UIManager.getLookAndFeel().getName());
 
+			// Change the font size for non-Nimbus look and feels after setting the look and feel
 			if (!Options.getInstance().isUseDefaultFontSize()) {
-				// change the defaults for all other LaFs
-				UIDefaults def = UIManager.getDefaults();
-				// def.keySet() doesnt seem to work -> use def.keys() instead!
-				Enumeration<Object> keys = def.keys();
-				while (keys.hasMoreElements()) {
-					Object key = keys.nextElement();
-					Font font = def.getFont(key);
-					if (font != null) {
-						if (font.getSize() != fontSize) {
-//                            System.out.println("Changing fontSize (2) from " + font.getSize() + " to " + fontSize);
-							def.put(key, new FontUIResource(font.getName(), font.getStyle(), fontSize));
-						}
-					}
-				}
+				changeFontSizeForNonNimbus(customFontSize);
 			}
 		} catch (Exception ex) {
 			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error changing LaF 3", ex);
+		}
+	}
+
+	/**
+	 * Change the font size for non-Nimbus look and feels.
+	 * <p>
+	 * On most LaFs (GTK excluded because nothing can be changed in GTK LaF), changing the font size works by changing
+	 * all Font instances in <code>UIManager.getDefaults()</code>.
+	 *
+	 * @param customFontSize The desired font size
+	 */
+	private static void changeFontSizeForNonNimbus(int customFontSize) {
+		UIDefaults def = UIManager.getDefaults();
+		Enumeration<Object> keys = def.keys();
+		while (keys.hasMoreElements()) {
+			Object key = keys.nextElement();
+			Font font = def.getFont(key);
+			if ((font != null) && (font.getSize() != customFontSize)) {
+				Logger.getLogger(Main.class.getName()).log(Level.CONFIG, "Changing font size for non-Nimbus look and feel from {0} to {1}", new Object[] {font.getSize(), customFontSize});
+				def.put(key, new FontUIResource(font.getName(), font.getStyle(), customFontSize));
+			}
+		}
+	}
+
+	/**
+	 * Change the font size for the Nimbus look and feel.
+	 * <p>
+	 * Due to late initialization issues with the Nimbus look and feel, the standard method for changing fonts leads to
+	 * unpredictable results (see <a
+	 * href="http://stackoverflow.com/questions/949353/java-altering-ui-fonts-nimbus-doesnt-work">this StackOverflow
+	 * post</a> for details).
+	 * <p>
+	 * Changing the font size in Nimbus can be done in one of two ways:
+	 *
+	 * <ul>
+	 * <li>Subclass <code>NimbusLookAndFeel</code> and override <code>getDefaults()</code></li>
+	 * <li>Obtain an instance of <code>NimbusLookAndFeel</code> and set the <code>defaultFont</code> option on the
+	 * instance directly (<b>not</b> on <code>UIManager.getDefaults()</code>).</li>
+	 * </ul>
+	 *
+	 * In addition, the package of the <code>NimbusLookAndFeel</code> class changed between Java 1.6
+	 * (<code>sun.swing.plaf.nimbus</code>) and 1.7 (<code>javax.swing.plaf.nimbus</code>). That means, that if the
+	 * class is subclassed or instantiated directly, code compiled with 1.7 will not start on 1.6 and vice versa (and of
+	 * course the program will not start on all JRE versions, that don't have Nimbus included). And we have to think of
+	 * the possibility that the class stored in {@link Options#laf} doesn't exist at all, if the hcfg file is moved
+	 * between platforms. Therefore, we use the strategy of obtaining an instance of <code>NimbusLookAndFeel</code> and
+	 * setting the <code>defaultFont</code> option on the instance directly.
+	 */
+	private static void changeFontSizeForNimbus(LookAndFeel instance, int customFontSize) {
+		UIDefaults def = instance.getDefaults();
+		Object value = null;
+		if ((value = def.get("defaultFont")) != null) {
+			// exists on Nimbus and triggers inheritance
+			Font font = (Font) value;
+			if (font.getSize() != customFontSize) {
+				Logger.getLogger(Main.class.getName()).log(Level.CONFIG, "Changing font size for Nimbus look and feel from {0} to {1}", new Object[] {font.getSize(), customFontSize});
+				def.put("defaultFont", new FontUIResource(font.getName(), font.getStyle(), customFontSize));
+			}
 		}
 	}
 
