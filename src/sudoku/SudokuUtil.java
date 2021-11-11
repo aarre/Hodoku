@@ -18,6 +18,7 @@
  */
 package sudoku;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.swing.*;
@@ -39,9 +40,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Singleton utility class with all static members.
+ *
  * @author hobiwan
+ * @author Aarre Laakso
  */
-public class SudokuUtil {
+public enum SudokuUtil {
+
+    INSTANCE;
+
     /**
      * The correct line separator for the current platform
      */
@@ -88,7 +95,7 @@ public class SudokuUtil {
      * @param g2
      * @return The scale factor
      */
-    public static double adjustGraphicsForPrinting(Graphics2D g2) {
+    static double adjustGraphicsForPrinting(@NotNull Graphics2D g2) {
         AffineTransform at = g2.getTransform();
         double[] matrix = new double[6];
         at.getMatrix(matrix);
@@ -288,7 +295,7 @@ public class SudokuUtil {
     /**
      * @return the pageFormat
      */
-    public static PageFormat getPageFormat() {
+    static PageFormat getPageFormat() {
         if (pageFormat == null) {
             pageFormat = getPrinterJob().defaultPage();
         }
@@ -298,7 +305,7 @@ public class SudokuUtil {
     /**
      * @return the printerJob
      */
-    public static PrinterJob getPrinterJob() {
+    static PrinterJob getPrinterJob() {
         if (printerJob == null) {
             printerJob = PrinterJob.getPrinterJob();
         }
@@ -311,7 +318,7 @@ public class SudokuUtil {
      * @param values
      * @return
      */
-    public static String getSSFormatted(String values) {
+    static String getSSFormatted(String values) {
         StringBuilder tmp = new StringBuilder();
         values = values.replace('0', '.');
         tmp.append(" *-----------*");
@@ -340,7 +347,7 @@ public class SudokuUtil {
      * @param grid
      * @return
      */
-    public static String getSSPMGrid(String grid) {
+    static String getSSPMGrid(String grid) {
 //        .---------------.------------.-------------.
 //        | 1   78    38  | 2   49  6  | 47  39  5   |
 //        | 9   67    5   | 3   8   14 | 47  16  2   |
@@ -673,21 +680,4 @@ public class SudokuUtil {
         tmp.append("  |");
         tmp.append(NEW_LINE);
     }
-
-    /**
-     * testing...
-     *
-     * @param args
-     */
-	/*
-	public static void main(String[] args) {
-		String grid = ".---------------.------------.-------------." + "| 1   78    38  | 2   49  6  | 47  39  5   |"
-				+ "| 9   67    5   | 3   8   14 | 47  16  2   |" + "| 36  4     2   | 19  7   5  | 8   36  19  |"
-				+ ":---------------+------------+-------------:" + "| 8   9     7   | 5   6   2  | 13  4   13  |"
-				+ "| 25  25    1   | 4   3   8  | 9   7   6   |" + "| 4   3     6   | 7   1   9  | 5   2   8   |"
-				+ ":---------------+------------+-------------:" + "| 36  16    4   | 8   5   7  | 2   19  139 |"
-				+ "| 7   158   89  | 19  2   3  | 6   58  4   |" + "| 25  1258  389 | 6   49  14 | 3   58  7   |"
-				+ "'---------------'------------'-------------'";
-		getSSPMGrid(grid);
-	}*/
 }
