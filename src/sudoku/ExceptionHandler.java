@@ -20,6 +20,8 @@
 
 package sudoku;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.logging.Logger;
 
 /**
@@ -33,7 +35,7 @@ public class ExceptionHandler implements Thread.UncaughtExceptionHandler
         super();
     }
 
-    public final void uncaughtException(final Thread thread, final Throwable thrown)
+    public final void uncaughtException(final @NotNull Thread thread, final Throwable thrown)
     {
         ExceptionHandler.logger.severe(thread.toString());
         final StackTraceElement[] threadStackTrace = thread.getStackTrace();
