@@ -19,16 +19,17 @@
 
 package solver;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import sudoku.Candidate;
 import sudoku.SolutionStep;
 import sudoku.SolutionType;
 import sudoku.Sudoku2;
 import sudoku.SudokuSinglesQueue;
 import sudoku.SudokuUtil;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -173,9 +174,9 @@ public class SimpleSolver extends AbstractSolver {
 		List<SolutionStep> oldList = steps;
 		List<SolutionStep> newList = new ArrayList<SolutionStep>();
 		steps = newList;
-		findFullHouse(true);
-		Collections.sort(steps);
-		steps = oldList;
+		this.findFullHouse(true);
+		Collections.sort(this.steps);
+		this.steps = oldList;
 		return newList;
 	}
 
@@ -191,13 +192,13 @@ public class SimpleSolver extends AbstractSolver {
 	private SolutionStep findFullHouse(boolean all) {
 		// SudokuUtil.clearStepList(steps);
 		SolutionStep step = null;
-		byte[][] free = sudoku.getFree();
-		SudokuSinglesQueue nsQueue = sudoku.getNsQueue();
+		final byte[][] free = this.sudoku.getFree();
+		final SudokuSinglesQueue nsQueue = this.sudoku.getNsQueue();
 		int queueIndex = nsQueue.getFirstIndex();
 		while (queueIndex != -1) {
-			int index = nsQueue.getIndex(queueIndex);
-			int value = nsQueue.getValue(queueIndex);
-			if (sudoku.getValue(index) == 0) {
+			final int index = nsQueue.getIndex(queueIndex);
+			final int value = nsQueue.getValue(queueIndex);
+			if (this.sudoku.getValue(index) == 0) {
 				// cell is still a valid Naked Single -> check constraints
 				// the cell is a member of three constraints
 				for (int i = 0; i < Sudoku2.CONSTRAINTS[index].length; i++) {
@@ -215,12 +216,10 @@ public class SimpleSolver extends AbstractSolver {
 					if (valid) {
 						// ok, we have a Full House
 						step = new SolutionStep(SolutionType.FULL_HOUSE);
-//                        step.setEntity(Sudoku2.CONSTRAINT_TYPE_FROM_CONSTRAINT[constr]);
-//                        step.setEntityNumber(Sudoku2.CONSTRAINT_NUMBER_FROM_CONSTRAINT[constr]);
 						step.addValue(value);
 						step.addIndex(index);
 						if (all) {
-							steps.add(step);
+							this.steps.add(step);
 							// could be a Full House in more than one constraint -> record only once
 							break;
 						} else {
